@@ -3,7 +3,7 @@
  <tileset firstgid="1" source="../Scetches And Other Stuff/tile.tsx"/>
  <layer id="1" name="Слой тайлов 1" width="30" height="25">
   <data encoding="base64" compression="zlib">
-   eJxjYWBgYBnFo3iEYGYgZiSAmWlkLzXUDCd7aRH25OofKvZiS7/0spca6YJUt9MibRJj7nC3l1AZSCvMNIpH8SimGAMAlQ4JZw==
+   eJztlDkSACAIA1H5/5vtbZAjaJFiu2QCKKiIKCHNrCJNJHcYoHJf9RvRZGu58SNmH/V7fae+M/ecWUWuVUfV3/S+N2InOvv9Nde6gSgmISTNBmmqCWE=
   </data>
  </layer>
 </map>

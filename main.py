@@ -40,16 +40,38 @@ class Player(pygame.sprite.Sprite):
 
     def go_horizont(self):
         self.speedx = 0
-        if self.rect.x < 0: #чтобы за экран не уходил
+        if self.rect.x < 0:  # чтобы за экран не уходил
             self.rect.x = 0
         elif self.rect.x > 928:
             self.rect.x = 928
+
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
-            self.speedx = -3 # float не работает
+            self.speedx = -3  # float не работает
         if key[pygame.K_RIGHT]:
             self.speedx = 3
         self.rect.x += self.speedx
+
+    def go_up(self, is_ladder):
+        self.speedx = 0
+        # id лестницы = 2
+        if self.rect.x < 0:  # чтобы за экран не уходил
+            self.rect.x = 0
+        elif self.rect.x > 512:
+            self.rect.x = 512
+
+        if is_ladder == 2:
+            key = pygame.key.get_pressed()
+            if key[pygame.K_UP]:
+                self.speedx = -3  # float не работает
+            if key[pygame.K_DOWN]:
+                self.speedx = 3
+            self.rect.y += self.speedx
+
+
+
+    def get_pos_plr(self):
+        return self.rect.x // 32 + 0.5, self.rect.y // 32
 
 
 class Level:
@@ -65,9 +87,8 @@ class Level:
                 image = self.map.get_tile_image(x, y, 0)
                 screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
-    def get_tileid(self):
-        pass
-
+    def get_tileid(self, pos):
+        return self.map.get_tile_gid(pos[0], pos[1], 0)
 
 running = True
 clock = pygame.time.Clock()
@@ -87,6 +108,9 @@ while running:
             running = False
 
     player.go_horizont()
+    player.go_up(lvl.get_tileid(player.get_pos_plr())) # от grt_pos_plr получаем место игрока
+    # отдаем в get_tileid и в ответ получаем id клетки
+    # отдаем это в go_up чтобы поднятся
     all_sprites.draw(screen)
     pygame.display.flip()
     screen.fill((0, 0, 0))
