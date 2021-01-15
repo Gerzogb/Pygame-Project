@@ -7,7 +7,7 @@ import pytmx
 pygame.init()
 size = width, height = 960, 800
 screen = pygame.display.set_mode(size)
-
+# 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 
 # взято из урока:
 def load_image(name, colorkey=None):
@@ -24,7 +24,7 @@ def load_image(name, colorkey=None):
         image.set_colorkey(colorkey)
     else:
         image = image.convert_alpha()
-    image = pygame.transform.scale(image, (32, 32))
+    image = pygame.transform.scale(image, (64, 64))
     return image
 
 
@@ -35,43 +35,59 @@ class Player(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
         self.rect.x = 32
-        self.rect.y = 16 * 32
+        self.rect.y = 15 * 32
         self.speedx = 0
+        self.mask = pygame.mask.from_surface(self.image)
+        self.hor_able = True
 
-    def go_horizont(self):
+    def go_horizont(self, is_ground):
         self.speedx = 0
         if self.rect.x < 0:  # чтобы за экран не уходил
             self.rect.x = 0
-        elif self.rect.x > 928:
-            self.rect.x = 928
+        elif self.rect.x > 896:
+            self.rect.x = 896
 
-        key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT]:
-            self.speedx = -3  # float не работает
-        if key[pygame.K_RIGHT]:
-            self.speedx = 3
+        if is_ground == 1:
+            self.hor_able = True # чтобы игрок не ходил по воздуху
+
+        if is_ground in range(1, 4) and self.hor_able:
+            key = pygame.key.get_pressed()
+            if key[pygame.K_LEFT]:
+                self.speedx = -3  # float не работает
+            if key[pygame.K_RIGHT]:
+                self.speedx = 3
+        else:
+            self.speedx = 0
         self.rect.x += self.speedx
 
     def go_up(self, is_ladder):
         self.speedx = 0
         # id лестницы = 2
-        if self.rect.x < 0:  # чтобы за экран не уходил
-            self.rect.x = 0
-        elif self.rect.x > 512:
-            self.rect.x = 512
+        # if self.rect.x < 0:  # чтобы за экран не уходил
+        #     self.rect.x = 0
+        # elif self.rect.x > 512:
+        #     self.rect.x = 512
 
-        if is_ladder == 2:
+        if (lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2) or is_ladder != 3:
             key = pygame.key.get_pressed()
             if key[pygame.K_UP]:
+                self.hor_able = False
                 self.speedx = -3  # float не работает
             if key[pygame.K_DOWN]:
+                self.hor_able = False
                 self.speedx = 3
-            self.rect.y += self.speedx
+        else:
+            self.speedx = 0
+            self.hor_able = True
+        self.rect.y += self.speedx
 
+    def fall(self, floor): # падение игрока
+        if floor != 3 and floor != 4 and floor != 2:
+            self.rect = self.rect.move(0, 2)
 
 
     def get_pos_plr(self):
-        return self.rect.x // 32 + 0.5, self.rect.y // 32
+        return self.rect.x // 32 + 1, self.rect.y // 32 + 2
 
 
 class Level:
@@ -88,6 +104,7 @@ class Level:
                 screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tileid(self, pos):
+        print(self.map.get_tile_gid(pos[0], pos[1], 0))
         return self.map.get_tile_gid(pos[0], pos[1], 0)
 
 running = True
@@ -107,10 +124,13 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    player.go_horizont()
-    player.go_up(lvl.get_tileid(player.get_pos_plr())) # от grt_pos_plr получаем место игрока
+    player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
+    player.go_up(lvl.get_tileid(player.get_pos_plr()))
+    # от grt_pos_plr получаем место игрока (нижний middle) в теории
     # отдаем в get_tileid и в ответ получаем id клетки
     # отдаем это в go_up чтобы поднятся
+    player.fall(lvl.get_tileid(player.get_pos_plr()))
+
     all_sprites.draw(screen)
     pygame.display.flip()
     screen.fill((0, 0, 0))
