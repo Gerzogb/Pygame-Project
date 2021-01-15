@@ -8,13 +8,14 @@ size = width, height = 480, 270
 screen = pygame.display.set_mode(size)
 
 
+# взято из урока:
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
-    # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
     image = pygame.image.load(fullname)
+
     if colorkey is not None:
         image = image.convert()
         if colorkey == -1:
@@ -22,8 +23,8 @@ def load_image(name, colorkey=None):
         image.set_colorkey(colorkey)
     else:
         image = image.convert_alpha()
-    image1 = pygame.transform.scale(image, (200, 200))
-    return image1
+    image = pygame.transform.scale(image, (200, 200))
+    return image
 
 
 class Player(pygame.sprite.Sprite):
@@ -36,13 +37,12 @@ class Player(pygame.sprite.Sprite):
 
     def go_horizont(self):
         self.speedx = 0
-        keystate = pygame.key.get_pressed()
-        if keystate[pygame.K_LEFT]:
-            self.speedx = -3 # ниже 1 не работает
-        if keystate[pygame.K_RIGHT]:
+        key = pygame.key.get_pressed()
+        if key[pygame.K_LEFT]:
+            self.speedx = -3 # float не работает
+        if key[pygame.K_RIGHT]:
             self.speedx = 3
         self.rect.x += self.speedx
-
 
 
 running = True
