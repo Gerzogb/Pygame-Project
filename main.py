@@ -7,6 +7,8 @@ import pytmx
 pygame.init()
 size = width, height = 960, 800
 screen = pygame.display.set_mode(size)
+gravity = 3
+clock = pygame.time.Clock()
 # 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 
 # взято из урока:
@@ -39,6 +41,7 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 0
         self.mask = pygame.mask.from_surface(self.image)
         self.hor_able = True
+        self.isJump = True
 
     def go_horizont(self, is_ground):
         self.speedx = 0
@@ -81,6 +84,19 @@ class Player(pygame.sprite.Sprite):
             self.hor_able = True
         self.rect.y += self.speedx
 
+    def jump(self): # прыжок
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE]:
+            if self.isJump:
+                time = 0
+                self.isJump = False
+                while time <= 1000:
+                    self.rect.y -= gravity * clock.tick()
+                    time += 1
+                self.isJump = True
+
+
+
     def fall(self, floor): # падение игрока
         if floor != 3 and floor != 4 and floor != 2:
             self.rect = self.rect.move(0, 2)
@@ -108,7 +124,7 @@ class Level:
         return self.map.get_tile_gid(pos[0], pos[1], 0)
 
 running = True
-clock = pygame.time.Clock()
+
 FPS = 60
 
 all_sprites = pygame.sprite.Group()
@@ -124,12 +140,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+
     player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
     player.go_up(lvl.get_tileid(player.get_pos_plr()))
     # от grt_pos_plr получаем место игрока (нижний middle) в теории
     # отдаем в get_tileid и в ответ получаем id клетки
     # отдаем это в go_up чтобы поднятся
     player.fall(lvl.get_tileid(player.get_pos_plr()))
+    player.jump()
 
     all_sprites.draw(screen)
     pygame.display.flip()
