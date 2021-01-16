@@ -30,6 +30,14 @@ def load_image(name, colorkey=None):
     return image
 
 
+def load_wave(name):
+    fullname = os.path.join('waves', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл со звуком '{fullname}' не найден")
+        sys.exit()
+    return fullname
+
+
 class Player(pygame.sprite.Sprite):
     image = load_image("player.png")
 
@@ -166,6 +174,10 @@ running = True
 
 FPS = 60
 
+pygame.init()
+pygame.mixer.init()
+pygame.mixer.music.load(load_wave('main.mp3'))
+
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
 enemy = Enemy(all_sprites)
@@ -174,7 +186,7 @@ all_sprites.add(player)
 all_sprites.add(enemy)
 
 lvl = Level()
-
+pygame.mixer.music.play(-1)
 while running:
     clock.tick(FPS)
     lvl.render()
