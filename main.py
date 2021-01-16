@@ -12,6 +12,7 @@ clock = pygame.time.Clock()
 # 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 
 # взято из урока:
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -48,7 +49,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = 15 * 32
         self.speedx = 0
         self.mask = pygame.mask.from_surface(self.image)
-        self.hor_able = True
+        self.hor_able = True  # защита от полета
         self.isJump = True
         self.on_right = True
 
@@ -60,9 +61,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = 896
 
         if is_ground == 1:
-            self.hor_able = True # чтобы игрок не ходил по воздуху
+            self.hor_able = True  # чтобы игрок не ходил по воздуху
 
         if is_ground in range(1, 4) and self.hor_able:
+            # проверка на возможность идти
             key = pygame.key.get_pressed()
             if key[pygame.K_LEFT]:
                 self.speedx = -3  # float не работает
@@ -75,10 +77,10 @@ class Player(pygame.sprite.Sprite):
     def go_up(self, is_ladder):
         self.speedx = 0
         # id лестницы = 2
-        # if self.rect.x < 0:  # чтобы за экран не уходил
-        #     self.rect.x = 0
-        # elif self.rect.x > 512:
-        #     self.rect.x = 512
+        if self.rect.x < 0:  # чтобы за экран не уходил
+            self.rect.x = 10
+        elif self.rect.x >= 512:
+            self.rect.x = 512
 
         if (lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2) or is_ladder != 3:
             key = pygame.key.get_pressed()
@@ -93,7 +95,8 @@ class Player(pygame.sprite.Sprite):
             self.hor_able = True
         self.rect.y += self.speedx
 
-    def jump(self): # прыжок
+    def jump(self):
+        # прыжок
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
             if self.isJump:
@@ -104,7 +107,8 @@ class Player(pygame.sprite.Sprite):
                     time += 1
                 self.isJump = True
 
-    def fall(self, floor): # падение игрока
+    def fall(self, floor):
+        # падение игрока
         if floor != 3 and floor != 4 and floor != 2:
             self.rect = self.rect.move(0, 2)
 
@@ -112,8 +116,11 @@ class Player(pygame.sprite.Sprite):
         return self.rect.x // 32 + 1, self.rect.y // 32 + 2
 
     def die(self):
+        # смерть игрока наступает если перескаются спрайты врага и игрока
         if pygame.sprite.collide_mask(enemy, player):
             print('dead')
+            player.kill()
+        if pygame.sprite.collide_mask(enemy2, player):
             player.kill()
 
 
@@ -159,6 +166,43 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y += speed
 
 
+class Bullet(pygame.sprite.Sprite):
+    # пуля/ выстрел, чтобы убивать врагов
+    image = load_image("bullet.png")
+
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.rect = self.image.get_rect()
+        self.rect.x += player.rect.x
+        self.rect.y += player.rect.y
+
+        self.image = pygame.transform.scale(self.image, (10, 6))
+        self.b_mask = pygame.mask.from_surface(self.image)
+        for evente in pygame.event.get():
+            if evente.type == pygame.KEYDOWN:
+                if evente.key == pygame.K_s:
+                    self.shoot()
+                    print('work')
+
+    def shoot(self):
+        self.spawn_bullet()
+        print('shooted')
+
+        if pygame.sprite.collide_mask(enemy, bullet):
+            bullet.kill()
+            enemy.kill()
+        elif pygame.sprite.collide_mask(enemy2, bullet):
+            bullet.kill()
+            enemy2.kill()
+
+    def spawn_bullet(self):
+        # pygame.time.wait(360)
+        print('spawned')
+
+        self.rect = self.rect.move(2, 0)
+
+
+
 class Level:
     def __init__(self):
         self.map = pytmx.load_pygame("data/map.tmx")
@@ -173,8 +217,9 @@ class Level:
                 screen.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tileid(self, pos):
-        print(self.map.get_tile_gid(pos[0], pos[1], 0))
+        # print(self.map.get_tile_gid(pos[0], pos[1], 0))
         return self.map.get_tile_gid(pos[0], pos[1], 0)
+
 
 running = True
 
@@ -186,6 +231,8 @@ pygame.mixer.music.load(load_wave('main.mp3'))
 
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
+bullet = Bullet(all_sprites)
+bullet.kill()
 
 enemy = Enemy(all_sprites)
 enemy.place(12, 15)
@@ -199,6 +246,7 @@ all_sprites.add(enemy2)
 
 lvl = Level()
 pygame.mixer.music.play(-1)
+
 while running:
     clock.tick(FPS)
     lvl.render()
@@ -207,11 +255,18 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT and player.on_right:
+                # поворот игрока в сторону движения
                 player.image = pygame.transform.flip(player.image, True, False)
                 player.on_right = False
-            elif event.key == pygame.K_RIGHT and not player.on_right:
+            if event.key == pygame.K_RIGHT and not player.on_right:
+                # поворот игрока в сторону движения
                 player.image = pygame.transform.flip(player.image, True, False)
                 player.on_right = True
+            if event.key == pygame.K_s and not bullet.alive():
+                all_sprites.add(bullet)
+                bullet.shoot()
+
+                bullet.kill()
 
     if player.alive():
         player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
