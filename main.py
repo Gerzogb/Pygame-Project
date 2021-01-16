@@ -104,14 +104,17 @@ class Player(pygame.sprite.Sprite):
                     time += 1
                 self.isJump = True
 
-
     def fall(self, floor): # падение игрока
         if floor != 3 and floor != 4 and floor != 2:
             self.rect = self.rect.move(0, 2)
 
-
     def get_pos_plr(self):
         return self.rect.x // 32 + 1, self.rect.y // 32 + 2
+
+    def die(self):
+        if pygame.sprite.collide_mask(enemy, player):
+            print('dead')
+            player.kill()
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -126,15 +129,18 @@ class Enemy(pygame.sprite.Sprite):
         self.image = self.images[self.index]
         self.image = pygame.transform.scale(self.image, (96, 96))
         self.rect = self.image.get_rect()
-        self.rect.x = 10 * 32
-        self.rect.y = 15 * 32
+        self.up = False
+        self.enm_mask = pygame.mask.from_surface(self.image)
 
-        self.up = True
+    def place(self, x_pos, y_pos):
+        self.rect.x = x_pos * 32
+        self.rect.y = y_pos * 32
+        self.x = x_pos  # координаты в тайлах
+        self.y = y_pos  # координаты в тайлах
+
         #self.rect = pygame.Rect(5, 5, 96, 96)
 
     def update(self):
-
-        #clock.tick(20)
         self.index += 1
         if self.index >= len(self.images):
             self.index = 0
@@ -142,13 +148,13 @@ class Enemy(pygame.sprite.Sprite):
 
     def fly(self):
         speed = 0
-        if self.rect.y >= 12 * 32 and self.up:
+        if self.rect.y >= (self.y - 3) * 32 and self.up:
             speed -= 2
-            if self.rect.y == 12 * 32:
+            if self.rect.y == (self.y - 3) * 32:
                 self.up = False
         else:
             speed += 2
-            if self.rect.y == 15 * 32:
+            if self.rect.y == self.y * 32:
                 self.up = True
         self.rect.y += speed
 
@@ -180,10 +186,16 @@ pygame.mixer.music.load(load_wave('main.mp3'))
 
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
+
 enemy = Enemy(all_sprites)
+enemy.place(12, 15)
+
+enemy2 = Enemy(all_sprites)
+enemy2.place(14, 4)
 
 all_sprites.add(player)
 all_sprites.add(enemy)
+all_sprites.add(enemy2)
 
 lvl = Level()
 pygame.mixer.music.play(-1)
@@ -201,17 +213,21 @@ while running:
                 player.image = pygame.transform.flip(player.image, True, False)
                 player.on_right = True
 
+    if player.alive():
+        player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
+        player.go_up(lvl.get_tileid(player.get_pos_plr()))
+        player.fall(lvl.get_tileid(player.get_pos_plr()))
+        # от grt_pos_plr получаем место игрока (нижний middle) в теории
+        # отдаем в get_tileid и в ответ получаем id клетки
+        # отдаем это в go_up чтобы поднятся
 
-    player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
-    player.go_up(lvl.get_tileid(player.get_pos_plr()))
-    # от grt_pos_plr получаем место игрока (нижний middle) в теории
-    # отдаем в get_tileid и в ответ получаем id клетки
-    # отдаем это в go_up чтобы поднятся
-    player.fall(lvl.get_tileid(player.get_pos_plr()))
-    player.jump()
+        player.jump()
+        player.die()
 
     enemy.update()
     enemy.fly()
+    enemy2.update()
+    enemy2.fly()
 
     all_sprites.draw(screen)
     pygame.display.flip()
