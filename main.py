@@ -42,6 +42,7 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.hor_able = True
         self.isJump = True
+        self.on_right = True
 
     def go_horizont(self, is_ground):
         self.speedx = 0
@@ -96,7 +97,6 @@ class Player(pygame.sprite.Sprite):
                 self.isJump = True
 
 
-
     def fall(self, floor): # падение игрока
         if floor != 3 and floor != 4 and floor != 2:
             self.rect = self.rect.move(0, 2)
@@ -139,6 +139,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT and player.on_right:
+                player.image = pygame.transform.flip(player.image, True, False)
+                player.on_right = False
+            elif event.key == pygame.K_RIGHT and not player.on_right:
+                player.image = pygame.transform.flip(player.image, True, False)
+                player.on_right = True
 
 
     player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
