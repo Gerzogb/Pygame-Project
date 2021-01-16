@@ -106,6 +106,45 @@ class Player(pygame.sprite.Sprite):
         return self.rect.x // 32 + 1, self.rect.y // 32 + 2
 
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.images = []
+        for i in range(1, 9):
+            self.images.append(load_image(f'fly_demon{i}.png'))
+            self.images.append(load_image(f'fly_demon{i}.png'))
+
+        self.index = 0
+        self.image = self.images[self.index]
+        self.image = pygame.transform.scale(self.image, (96, 96))
+        self.rect = self.image.get_rect()
+        self.rect.x = 10 * 32
+        self.rect.y = 15 * 32
+
+        self.up = True
+        #self.rect = pygame.Rect(5, 5, 96, 96)
+
+    def update(self):
+
+        #clock.tick(20)
+        self.index += 1
+        if self.index >= len(self.images):
+            self.index = 0
+        self.image = self.images[self.index]
+
+    def fly(self):
+        speed = 0
+        if self.rect.y >= 12 * 32 and self.up:
+            speed -= 2
+            if self.rect.y == 12 * 32:
+                self.up = False
+        else:
+            speed += 2
+            if self.rect.y == 15 * 32:
+                self.up = True
+        self.rect.y += speed
+
+
 class Level:
     def __init__(self):
         self.map = pytmx.load_pygame("data/map.tmx")
@@ -129,7 +168,10 @@ FPS = 60
 
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
+enemy = Enemy(all_sprites)
+
 all_sprites.add(player)
+all_sprites.add(enemy)
 
 lvl = Level()
 
@@ -155,6 +197,9 @@ while running:
     # отдаем это в go_up чтобы поднятся
     player.fall(lvl.get_tileid(player.get_pos_plr()))
     player.jump()
+
+    enemy.update()
+    enemy.fly()
 
     all_sprites.draw(screen)
     pygame.display.flip()
