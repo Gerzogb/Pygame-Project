@@ -9,9 +9,17 @@ size = width, height = 960, 800
 screen = pygame.display.set_mode(size)
 gravity = 3
 clock = pygame.time.Clock()
+started = True
 # 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 
+'''
+to-do:
+меню
+убрать возможность игрока провалиться под землю
+'''
+
 # взято из урока:
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -39,6 +47,44 @@ def load_wave(name):
     return fullname
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    intro_text = ["Н А З В А Н И Е", "",
+                  "Правила игры:",
+                  "Ходьба: стрелочки,",
+                  "Прыжок: пробел,",
+                  "Выстрел: ы / s",
+                  "",
+                  "нажмите любую клавишу для продолжения"]
+
+    fon = pygame.Rect(0, 0, 960, 800)
+    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
+    font = pygame.font.Font(None, 30)
+    text_coord = 80
+    for line in intro_text:
+        string_rendered = font.render(line, True, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 class Player(pygame.sprite.Sprite):
     image = load_image("player.png")
 
@@ -49,7 +95,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = 15 * 32
         self.speedx = 0
         self.mask = pygame.mask.from_surface(self.image)
-        self.hor_able = True  # защита от полета
+        self.hor_able = True  # защита от хождения по воздуху
         self.isJump = True
         self.on_right = True
 
@@ -82,7 +128,7 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.x >= 512:
             self.rect.x = 512
 
-        if (lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2) or is_ladder != 3:
+        if lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2:
             key = pygame.key.get_pressed()
             if key[pygame.K_UP]:
                 self.hor_able = False
@@ -117,10 +163,10 @@ class Player(pygame.sprite.Sprite):
 
     def die(self):
         # смерть игрока наступает если перескаются спрайты врага и игрока
-        if pygame.sprite.collide_mask(enemy, player):
+        if pygame.sprite.collide_mask(enemy, player) and enemy.alive():
             print('dead')
             player.kill()
-        if pygame.sprite.collide_mask(enemy2, player):
+        if pygame.sprite.collide_mask(enemy2, player) and enemy.alive():
             player.kill()
 
 
@@ -234,6 +280,7 @@ pygame.init()
 pygame.mixer.init()
 pygame.mixer.music.load(load_wave('main.mp3'))
 
+start_screen()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
 bullet = Bullet()
@@ -255,10 +302,14 @@ pygame.mixer.music.play(-1)
 while running:
     clock.tick(FPS)
     lvl.render()
+    # if started:
+    #     start_screen()
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
+            started = False
             if event.key == pygame.K_LEFT and player.on_right:
                 # поворот игрока в сторону движения
                 player.image = pygame.transform.flip(player.image, True, False)
