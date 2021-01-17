@@ -11,7 +11,7 @@ class MyWidget(QWidget):
         self.btn_play.clicked.connect(self.play)
 
     def play(self):
-        import main
+        import game
         sys.exit()
 
 if __name__ == '__main__':

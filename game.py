@@ -221,6 +221,7 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
         self.is_fire = False
+        self.go_straight = 0
         if not self.is_fire:
             self.rect.x = player.rect.x
             self.rect.y = player.rect.y
@@ -237,28 +238,45 @@ class Bullet(pygame.sprite.Sprite):
         elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
             enemy.kill()
+            self.go_straight = 0
             print('killed')
             self.is_fire = False
 
         elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
             enemy2.kill()
+            self.go_straight = 0
             print('killed')
             self.is_fire = False
 
         elif self.rect.x >= 981 or self.rect.x <= 0:
             bullet.kill()
+            self.go_straight = 0
             self.is_fire = False
 
         elif self.is_fire and bullet.alive():
-            if player.on_right:
-                self.rect = self.rect.move(10, 0)
+            if not self.go_straight:
+                if player.on_right:
+                    self.rect = self.rect.move(10, 0)
+                    self.right = True
+                    self.go_straight += 1
+                else:
+                    self.rect = self.rect.move(-10, 0)
+                    self.right = False
+                    self.go_straight += 1
             else:
-                self.rect = self.rect.move(-10, 0)
+                if self.right:
+                    self.rect = self.rect.move(10, 0)
+                else:
+                    self.rect = self.rect.move(-10, 0)
+
 
     def update(self, plr_x, plr_y):
         self.rect.x = plr_x
         self.rect.y = plr_y
+
+    def check(self, turn):
+        return player.on_right
 
 
 class Level:
