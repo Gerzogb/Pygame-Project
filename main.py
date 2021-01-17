@@ -103,8 +103,8 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 0
         if self.rect.x < 0:  # чтобы за экран не уходил
             self.rect.x = 0
-        elif self.rect.x > 896:
-            self.rect.x = 896
+        elif self.rect.x >= 960 - 64:
+            self.rect.x = 960 - 64
 
         if is_ground == 1:
             self.hor_able = True  # чтобы игрок не ходил по воздуху
@@ -123,10 +123,11 @@ class Player(pygame.sprite.Sprite):
     def go_up(self, is_ladder):
         self.speedx = 0
         # id лестницы = 2
-        if self.rect.x < 0:  # чтобы за экран не уходил
-            self.rect.x = 10
-        elif self.rect.x >= 512:
-            self.rect.x = 512
+        # чтобы за экран не уходил
+        if self.rect.y < 0:
+            self.rect.y = 10
+        elif self.rect.y >= 512:
+            self.rect.y = 512
 
         if lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2:
             key = pygame.key.get_pressed()
@@ -143,15 +144,15 @@ class Player(pygame.sprite.Sprite):
 
     def jump(self):
         # прыжок
-        key = pygame.key.get_pressed()
-        if key[pygame.K_SPACE]:
+        # key = pygame.key.get_pressed()
+        # if key[pygame.K_SPACE]:
             if self.isJump:
                 time = 0
                 self.isJump = False
                 while time <= 1000:
                     self.rect.y -= gravity * clock.tick()
                     time += 1
-                self.isJump = True
+                #self.isJump = True
 
     def fall(self, floor):
         # падение игрока
@@ -174,6 +175,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, *groups):
         super().__init__(*groups)
         self.images = []
+
         for i in range(1, 9):
             self.images.append(load_image(f'fly_demon{i}.png'))
             self.images.append(load_image(f'fly_demon{i}.png'))
@@ -191,7 +193,6 @@ class Enemy(pygame.sprite.Sprite):
         self.x = x_pos  # координаты в тайлах
         self.y = y_pos  # координаты в тайлах
 
-        #self.rect = pygame.Rect(5, 5, 96, 96)
 
     def update(self):
         self.index += 1
@@ -205,6 +206,7 @@ class Enemy(pygame.sprite.Sprite):
             speed -= 2
             if self.rect.y == (self.y - 3) * 32:
                 self.up = False
+
         else:
             speed += 2
             if self.rect.y == self.y * 32:
@@ -233,21 +235,27 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.x = player.rect.x
             self.rect.y = player.rect.y
 
-        elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire:
+        elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
             enemy.kill()
             print('killed')
             self.is_fire = False
-        elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire:
+
+        elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
             enemy2.kill()
             print('killed')
             self.is_fire = False
-        elif self.rect.x >= 981:
+
+        elif self.rect.x >= 981 or self.rect.x <= 0:
             bullet.kill()
             self.is_fire = False
+
         elif self.is_fire and bullet.alive():
-            self.rect = self.rect.move(10, 0)
+            if player.on_right:
+                self.rect = self.rect.move(10, 0)
+            else:
+                self.rect = self.rect.move(-10, 0)
 
     def update(self, plr_x, plr_y):
         self.rect.x = plr_x
@@ -302,8 +310,7 @@ pygame.mixer.music.play(-1)
 while running:
     clock.tick(FPS)
     lvl.render()
-    # if started:
-    #     start_screen()
+
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -321,6 +328,10 @@ while running:
             if event.key == pygame.K_s and not bullet.alive():
                 bullet.is_fire = True
 
+            if event.key == pygame.K_SPACE and not player.isJump:
+                player.isJump = True
+                player.jump()
+
     if player.alive():
         player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
         player.go_up(lvl.get_tileid(player.get_pos_plr()))
@@ -329,9 +340,10 @@ while running:
         # отдаем в get_tileid и в ответ получаем id клетки
         # отдаем это в go_up чтобы поднятся
 
-        player.jump()
+        # player.jump()
         player.die()
 
+    # проверяет есть ли возможность выстрела
     if bullet.is_fire and bullet.alive():
         bullet.shoot()
     elif bullet.is_fire and not bullet.alive():
