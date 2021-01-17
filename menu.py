@@ -12,6 +12,7 @@ class MyWidget(QWidget):
 
     def play(self):
         import main
+        sys.exit()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
