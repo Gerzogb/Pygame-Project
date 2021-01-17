@@ -15,7 +15,7 @@ started = True
 '''
 to-do:
 меню
-убрать возможность игрока провалиться под землю
+возможно ещё уровень
 '''
 
 # взято из урока:
@@ -128,13 +128,13 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.y >= 512:
             self.rect.y = 512
 
-        if lvl.get_tileid(player.get_pos_plr()) - 1 == 2 or is_ladder == 2:
+        if is_ladder == 2 or lvl.get_tileid(player.get_pos_plr(1)) == 2:
             key = pygame.key.get_pressed()
             if key[pygame.K_UP]:
                 self.hor_able = False
                 self.speedx = -3  # float не работает
-            if key[pygame.K_DOWN]:
-                self.hor_able = False
+            if key[pygame.K_DOWN] and lvl.get_tileid(player.get_pos_plr()) != 3:
+                self.hor_able = True
                 self.speedx = 3
         else:
             self.speedx = 0
@@ -158,8 +158,8 @@ class Player(pygame.sprite.Sprite):
         if floor != 3 and floor != 4 and floor != 2:
             self.rect = self.rect.move(0, 2)
 
-    def get_pos_plr(self):
-        return self.rect.x // 32 + 1, self.rect.y // 32 + 2
+    def get_pos_plr(self, plus=2):
+        return self.rect.x // 32 + 1, self.rect.y // 32 + plus
 
     def die(self):
         # смерть игрока наступает если перескаются спрайты врага и игрока
@@ -221,10 +221,10 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
         self.is_fire = False
-        self.go_straight = 0
+        self.go_straight = 0  # чтобы пуля не поворачивалась за игроком
         if not self.is_fire:
-            self.rect.x = player.rect.x
-            self.rect.y = player.rect.y
+            self.rect.x = player.rect.x + 1
+            self.rect.y = player.rect.y + 2
 
         self.image = pygame.transform.scale(self.image, (10, 6))
         self.b_mask = pygame.mask.from_surface(self.image)
@@ -232,8 +232,8 @@ class Bullet(pygame.sprite.Sprite):
     def shoot(self):
         print('shooted')
         if not self.is_fire and not bullet.alive():
-            self.rect.x = player.rect.x
-            self.rect.y = player.rect.y
+            self.rect.x = player.rect.x + 1
+            self.rect.y = player.rect.y + 2
 
         elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
@@ -242,7 +242,7 @@ class Bullet(pygame.sprite.Sprite):
             print('killed')
             self.is_fire = False
 
-        elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire and enemy.alive():
+        elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire and enemy2.alive():
             bullet.kill()
             enemy2.kill()
             self.go_straight = 0
@@ -256,6 +256,7 @@ class Bullet(pygame.sprite.Sprite):
 
         elif self.is_fire and bullet.alive():
             if not self.go_straight:
+                # таким образом проверка направления только один раз
                 if player.on_right:
                     self.rect = self.rect.move(10, 0)
                     self.right = True
@@ -270,13 +271,10 @@ class Bullet(pygame.sprite.Sprite):
                 else:
                     self.rect = self.rect.move(-10, 0)
 
-
     def update(self, plr_x, plr_y):
-        self.rect.x = plr_x
-        self.rect.y = plr_y
+        self.rect.x = plr_x + 1
+        self.rect.y = plr_y + 2
 
-    def check(self, turn):
-        return player.on_right
 
 
 class Level:
