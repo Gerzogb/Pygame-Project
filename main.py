@@ -173,34 +173,39 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, *groups):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
-        self.rect.x += player.rect.x
-        self.rect.y += player.rect.y
+        self.is_fire = False
+        if not self.is_fire:
+            self.rect.x = player.rect.x
+            self.rect.y = player.rect.y
 
         self.image = pygame.transform.scale(self.image, (10, 6))
         self.b_mask = pygame.mask.from_surface(self.image)
-        for evente in pygame.event.get():
-            if evente.type == pygame.KEYDOWN:
-                if evente.key == pygame.K_s:
-                    self.shoot()
-                    print('work')
 
     def shoot(self):
-        self.spawn_bullet()
         print('shooted')
+        if not self.is_fire and not bullet.alive():
+            self.rect.x = player.rect.x
+            self.rect.y = player.rect.y
 
-        if pygame.sprite.collide_mask(enemy, bullet):
+        elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire:
             bullet.kill()
             enemy.kill()
-        elif pygame.sprite.collide_mask(enemy2, bullet):
+            print('killed')
+            self.is_fire = False
+        elif pygame.sprite.collide_mask(enemy2, bullet) and self.is_fire:
             bullet.kill()
             enemy2.kill()
+            print('killed')
+            self.is_fire = False
+        elif self.rect.x >= 981:
+            bullet.kill()
+            self.is_fire = False
+        elif self.is_fire and bullet.alive():
+            self.rect = self.rect.move(10, 0)
 
-    def spawn_bullet(self):
-        # pygame.time.wait(360)
-        print('spawned')
-
-        self.rect = self.rect.move(2, 0)
-
+    def update(self, plr_x, plr_y):
+        self.rect.x = plr_x
+        self.rect.y = plr_y
 
 
 class Level:
@@ -231,7 +236,7 @@ pygame.mixer.music.load(load_wave('main.mp3'))
 
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
-bullet = Bullet(all_sprites)
+bullet = Bullet()
 bullet.kill()
 
 enemy = Enemy(all_sprites)
@@ -263,10 +268,7 @@ while running:
                 player.image = pygame.transform.flip(player.image, True, False)
                 player.on_right = True
             if event.key == pygame.K_s and not bullet.alive():
-                all_sprites.add(bullet)
-                bullet.shoot()
-
-                bullet.kill()
+                bullet.is_fire = True
 
     if player.alive():
         player.go_horizont(lvl.get_tileid(player.get_pos_plr()))
@@ -278,6 +280,14 @@ while running:
 
         player.jump()
         player.die()
+
+    if bullet.is_fire and bullet.alive():
+        bullet.shoot()
+    elif bullet.is_fire and not bullet.alive():
+        all_sprites.add(bullet)
+        bullet.shoot()
+    elif not bullet.is_fire and not bullet.alive():
+        bullet.update(player.rect.x, player.rect.y)
 
     enemy.update()
     enemy.fly()
