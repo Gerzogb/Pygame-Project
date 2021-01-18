@@ -19,8 +19,20 @@
                     color: #f3f7fb;
                 }
  QPushButton {
-                    background : #c11701;
-                    border-radius: 10px; 
+  display: block;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 8px;
+  width: 80%;
+  max-width: 200px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: black;
+  text-align: center;
+  text-decoration: none;
+  letter-spacing: 1px;
+  font-family: Comic Sans MS;
+  font-size: 16pt;
                 }
 QLabel{
 					background-image: url(data/menu.jpg);
@@ -42,9 +54,9 @@ QLabel{
   <widget class="QPushButton" name="btn_settings">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>115</x>
      <y>300</y>
-     <width>200</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -55,9 +67,9 @@ QLabel{
   <widget class="QPushButton" name="btn_play">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>115</x>
      <y>180</y>
-     <width>200</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
