@@ -114,7 +114,6 @@ def dead_screen():
                 terminate()
 
 
-
 class Player(pygame.sprite.Sprite):
     image = load_image("player.png")
 
@@ -131,10 +130,12 @@ class Player(pygame.sprite.Sprite):
 
     def go_horizont(self, is_ground):
         self.speedx = 0
-        if self.rect.x < 0:  # чтобы за экран не уходил
-            self.rect.x = 0
+        if self.rect.x < 16:  # чтобы за экран не уходил
+            self.rect.x = 16
         elif self.rect.x >= 960 - 64:
-            self.rect.x = 960 - 64
+            lvl.now_lvl = 2
+            self.rect.x = 32
+            self.rect.y = 15 * 32
 
         if is_ground == 1:
             self.hor_able = True  # чтобы игрок не ходил по воздуху
@@ -309,11 +310,12 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Level:
-    def __init__(self):
-        self.map = pytmx.load_pygame("data/map.tmx")
+    def __init__(self, num=1):
+        self.map = pytmx.load_pygame(f"data/map{num}.tmx")
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = 32
+        self.now_lvl = num
 
     def render(self):
         for y in range(self.height):
@@ -324,6 +326,9 @@ class Level:
     def get_tileid(self, pos):
         # print(self.map.get_tile_gid(pos[0], pos[1], 0))
         return self.map.get_tile_gid(pos[0], pos[1], 0)
+
+    def new_lvl(self):
+        lvl = Level(2)
 
 
 running = True
@@ -350,18 +355,23 @@ all_sprites.add(player)
 all_sprites.add(enemy)
 all_sprites.add(enemy2)
 
-lvl = Level()
+lvl = Level(1)
+lvl2 = Level(2)
 pygame.mixer.music.play(-1)
 
 while running:
     again = False
     clock.tick(FPS)
-    lvl.render()
+    if lvl.now_lvl == 1:
+        lvl.render()
+    else:
+        lvl2.render()
 
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
             running = False
+            terminate()
         if event.type == pygame.KEYDOWN:
             started = False
             if event.key == pygame.K_LEFT and player.on_right:
