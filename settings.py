@@ -11,7 +11,7 @@ class MyWidget(QWidget):
         self.btn_save.clicked.connect(self.save)
 
     def save(self):
-        pass
+        self.show()
 
 
 if __name__ == '__main__':
