@@ -11,8 +11,10 @@ class MyWidget(QWidget):
         self.btn_play.clicked.connect(self.play)
 
     def play(self):
+        self.hide()
         import game
-        sys.exit()
+        self.show()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

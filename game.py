@@ -84,6 +84,37 @@ def start_screen():
         clock.tick(FPS)
 
 
+def dead_screen():
+    intro_text = ["Вы умерли",
+                  "",
+                  "нажмите любую клавишу для продолжения"]
+
+    fon = pygame.Rect(0, 0, 960, 800)
+    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
+    font = pygame.font.Font(None, 30)
+    text_coord = 80
+    for line in intro_text:
+        string_rendered = font.render(line, True, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        pygame.display.flip()
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                import main
+                terminate()
+
+
+
 class Player(pygame.sprite.Sprite):
     image = load_image("player.png")
 
@@ -145,13 +176,13 @@ class Player(pygame.sprite.Sprite):
         # прыжок
         # key = pygame.key.get_pressed()
         # if key[pygame.K_SPACE]:
-            if self.isJump:
-                time = 0
-                self.isJump = False
-                while time <= 1000:
-                    self.rect.y -= gravity * clock.tick()
-                    time += 1
-                #self.isJump = True
+        if self.isJump:
+            time = 0
+            self.isJump = False
+            while time <= 20000:
+                self.rect.y -= gravity * clock.tick()
+                time += 1
+            #self.isJump = True
 
     def fall(self, floor):
         # падение игрока
@@ -323,6 +354,7 @@ lvl = Level()
 pygame.mixer.music.play(-1)
 
 while running:
+    again = False
     clock.tick(FPS)
     lvl.render()
 
@@ -355,8 +387,10 @@ while running:
         # отдаем в get_tileid и в ответ получаем id клетки
         # отдаем это в go_up чтобы поднятся
 
-        # player.jump()
+        player.jump()
         player.die()
+    else:
+        dead_screen()
 
     # проверяет есть ли возможность выстрела
     if bullet.is_fire and bullet.alive():
