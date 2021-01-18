@@ -9,9 +9,16 @@ class MyWidget(QWidget):
         super().__init__()
         uic.loadUi('menu.ui', self)  # Загружаем дизайн
         self.btn_play.clicked.connect(self.play)
+        self.btn_settings.clicked.connect(self.settingsWindow)
 
     def play(self):
+        self.hide()
         import game
+        self.show()
+
+    def settingsWindow(self):
+        self.hide()
+        import settings
         self.show()
 
 
