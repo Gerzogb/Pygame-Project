@@ -12,6 +12,7 @@ class MyWidget(QWidget):
 
     def play(self):
         import game
+        self.show()
 
 
 if __name__ == '__main__':
