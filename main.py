@@ -27,9 +27,14 @@ class SettingWindow(QWidget):
         super().__init__()
         uic.loadUi('settings.ui', self)
         self.btn_save.clicked.connect(self.save)
+        self.btn_back.clicked.connect(self.back)
 
     def save(self):
-        pas
+        pass
+
+    def back(self):
+        self.hide()
+        ex.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
