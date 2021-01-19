@@ -109,70 +109,20 @@ def dead_screen():
                 terminate()
 
 
-def bad_end_screen():
+def end_screen():
     # это экран плохой концовки, появляется если убиты все 4 демона
-    intro_text = ["Вы убили всех демонов на пути",
-                  "",
-                  "За это вас оставили в аду"]
-    fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
-    font = pygame.font.Font(None, 30)
-    text_coord = 80
-    for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
-
-    while True:
-        pygame.display.flip()
-        clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                terminate()
-
-
-def meh_end_screen():
-    # это экран средней концовки, появляется если убито меньше 4 демонов
-    intro_text = ["Вы убили несколько демонов",
-                  "",
-                  "Вас отправили в чистилище"]
-
-    fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
-    font = pygame.font.Font(None, 30)
-    text_coord = 80
-    for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
-    while True:
-        pygame.display.flip()
-        clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                terminate()
-
-
-def good_end_screen():
-    # это экран хорошой концовки, появляется если никто не был убит
-    intro_text = ["Вы успешно выбрались из ада сохранив святость",
-                  "",
-                  "Вас немедленно отправили в рай"]
-
+    if player.KILLS == 4:
+        intro_text = ["Вы убили всех демонов на пути",
+                      "",
+                      "За это вас оставили в аду"]
+    elif player.KILLS in range(1, 4):
+        intro_text = ["Вы убили несколько демонов",
+                      "",
+                      "Вас отправили в чистилище"]
+    elif player.KILLS == 0:
+        intro_text = ["Вы успешно выбрались из ада сохранив святость",
+                      "",
+                      "Вас немедленно отправили в рай"]
     fon = pygame.Rect(0, 0, 960, 800)
     pygame.draw.rect(screen, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
@@ -221,12 +171,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x = 32
                 self.rect.y = 15 * 32
             elif lvl.now_lvl == 2:
-                if self.KILLS == 4:
-                    bad_end_screen()
-                elif self.KILLS in range(1, 4):
-                    meh_end_screen()
-                else:
-                    good_end_screen()
+                end_screen()
 
         if is_ground in range(1, 4):
             # проверка на возможность идти
@@ -414,7 +359,6 @@ class Bullet(pygame.sprite.Sprite):
     def update(self, plr_x, plr_y):
         self.rect.x = plr_x + 1
         self.rect.y = plr_y + 2
-
 
 
 class Level:
