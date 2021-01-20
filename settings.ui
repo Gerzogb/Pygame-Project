@@ -25,9 +25,9 @@
   padding: 8px;
   width: 80%;
   max-width: 200px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  color: black;
+  color: yellow;
   text-align: center;
   text-decoration: none;
   letter-spacing: 1px;
