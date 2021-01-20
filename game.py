@@ -160,6 +160,7 @@ class Player(pygame.sprite.Sprite):
         self.isJump = True
         self.on_right = True
         self.KILLS = 0  # счетчик убийств, от к-го зависит концовка
+        self.can_fall = True
 
     def go_horizont(self, is_ground):
         self.speedx = 0
@@ -174,7 +175,7 @@ class Player(pygame.sprite.Sprite):
                 lvl.now_lvl = 3
                 self.rect.x = 32
                 self.rect.y = 15 * 32
-            elif lvl.now_lvl == 4:
+            elif lvl.now_lvl == 3:
                 end_screen()
 
         if is_ground in range(1, 4):
@@ -194,7 +195,7 @@ class Player(pygame.sprite.Sprite):
         # чтобы за экран не уходил
         if self.rect.y < 0:
             self.rect.y = 10
-        elif self.rect.y > 768:
+        elif self.rect.y > 700:
             player.kill()
 
         if is_ladder == 2 or lvl.get_tileid(player.get_pos_plr(1)) == 2:
@@ -221,8 +222,9 @@ class Player(pygame.sprite.Sprite):
 
     def fall(self, floor):
         # падение игрока
-        if floor != 3 and floor != 4 and floor != 2:
-            self.rect = self.rect.move(0, 3)
+        if self.can_fall:
+            if floor != 3 and floor != 4 and floor != 2:
+                self.rect = self.rect.move(0, 3)
 
     def get_pos_plr(self, plus=2):
         return self.rect.x // 32 + 1, self.rect.y // 32 + plus
@@ -238,7 +240,9 @@ class Player(pygame.sprite.Sprite):
             player.kill()
         if pygame.sprite.collide_mask(enemy4, player) and enemy4.alive():
             player.kill()
-        if self.rect.y > 768:
+        if self.rect.y > 700:
+            player.kill()
+        if lvl.get_tileid(player.get_pos_plr()) == 2:
             player.kill()
 
 
@@ -292,7 +296,7 @@ class Platform(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
         self.rect.y = 17 * 32
-        self.rect.x = 9 * 32
+        self.rect.x = 8 * 32
         self.image = pygame.transform.scale(self.image, (64, 32))
         self.p_mask = pygame.mask.from_surface(self.image)
         self.go_right = True
@@ -306,6 +310,12 @@ class Platform(pygame.sprite.Sprite):
             self.go_right = False
         elif self.rect.x == 320:
             self.go_right = True
+
+        if pygame.sprite.collide_mask(player, platform):
+            player.can_fall = False
+            player.rect.y += 1
+        else:
+            player.can_fall = True
 
 
 class Bullet(pygame.sprite.Sprite):
