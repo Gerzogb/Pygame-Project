@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Menu</class>
- <widget class="QWidget" name="Menu">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Главное меню</string>
+   <string>Form</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget {
@@ -32,7 +32,7 @@
   text-decoration: none;
   letter-spacing: 1px;
   font-family: Comic Sans MS;
-  font-size: 16pt;
+
                 }
 QLabel{
 					background-image: url(data/menu.jpg);
@@ -51,25 +51,7 @@ QLabel{
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="btn_settings">
-   <property name="geometry">
-    <rect>
-     <x>115</x>
-     <y>350</y>
-     <width>170</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"> QPushButton {
-	font-size: 17px;
-}</string>
-   </property>
-   <property name="text">
-    <string>Settings</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btn_play">
+  <widget class="QPushButton" name="btn_new">
    <property name="geometry">
     <rect>
      <x>115</x>
@@ -78,8 +60,37 @@ QLabel{
      <height>51</height>
     </rect>
    </property>
+   <property name="whatsThis">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;New Game&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"> QPushButton {
+	font-size: 14px;
+}</string>
+   </property>
    <property name="text">
-    <string>PLay</string>
+    <string>New game</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_ex">
+   <property name="geometry">
+    <rect>
+     <x>115</x>
+     <y>350</y>
+     <width>170</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="whatsThis">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;New Game&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"> QPushButton {
+	font-size: 18px;
+}</string>
+   </property>
+   <property name="text">
+    <string>Exit</string>
    </property>
   </widget>
  </widget>
