@@ -2,16 +2,16 @@ import os
 import sys
 import pygame
 import pytmx
-import dead_menu  # игнорируй эту ошибку, она не влияет
+import dead_menu  # оно существует (работает даже при этой ошибке)
 
 
 pygame.init()
-size = width, height = 960, 800
-screen = pygame.display.set_mode(size)
-gravity = 3
+SIZE = width, height = 960, 800
+SCREEN = pygame.display.set_mode(SIZE)
+GRAVITY = 3
+FPS = 60
 clock = pygame.time.Clock()
 started = True
-running = True
 # 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 # взято из урока:
 
@@ -59,7 +59,7 @@ def start_screen():
                   "нажмите любую клавишу для продолжения"]
 
     fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
+    pygame.draw.rect(SCREEN, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
     text_coord = 80
     for line in intro_text:
@@ -69,14 +69,14 @@ def start_screen():
         intro_rect.top = text_coord
         intro_rect.x = 10
         text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+        SCREEN.blit(string_rendered, intro_rect)
 
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for event_ in pygame.event.get():
+            if event_.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
+            elif event_.type == pygame.KEYDOWN or \
+                    event_.type == pygame.MOUSEBUTTONDOWN:
                 return  # начинаем игру
         pygame.display.flip()
         clock.tick(FPS)
@@ -88,7 +88,7 @@ def dead_screen():
                   "нажмите любую клавишу для продолжения"]
 
     fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
+    pygame.draw.rect(SCREEN, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
     text_coord = 80
     for line in intro_text:
@@ -98,16 +98,16 @@ def dead_screen():
         intro_rect.top = text_coord
         intro_rect.x = 10
         text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+        SCREEN.blit(string_rendered, intro_rect)
 
     while True:
         pygame.display.flip()
         clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for event_ in pygame.event.get():
+            if event_.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
+            elif event_.type == pygame.KEYDOWN or \
+                    event_.type == pygame.MOUSEBUTTONDOWN:
                 terminate()
 
 
@@ -126,7 +126,7 @@ def end_screen():
                       "",
                       "Вас немедленно отправили в рай"]
     fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
+    pygame.draw.rect(SCREEN, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
     text_coord = 80
     for line in intro_text:
@@ -136,7 +136,7 @@ def end_screen():
         intro_rect.top = text_coord
         intro_rect.x = 10
         text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+        SCREEN.blit(string_rendered, intro_rect)
 
     while True:
         pygame.display.flip()
@@ -158,11 +158,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = 32
         self.rect.y = 15 * 32
         self.speedx = 0
-        self.can_fall = True
         self.mask = pygame.mask.from_surface(self.image)
         self.isJump = True
         self.on_right = True
-        self.KILLS = 0 # счетчик убийств
+        self.KILLS = 0  # счетчик убийств, от к-го зависит концовка
+        self.can_fall = True
 
     def go_horizont(self, is_ground):
         self.speedx = 0
@@ -208,7 +208,7 @@ class Player(pygame.sprite.Sprite):
             key = pygame.key.get_pressed()
             if key[pygame.K_UP]:
                 self.speedx = -3  # float не работает
-            if key[pygame.K_DOWN] and lvl.get_tileid(player.get_pos_plr(2)) != 3:
+            if key[pygame.K_DOWN] and lvl.get_tileid(player.get_pos_plr()) != 3:
                 self.speedx = 3
         else:
             self.speedx = 0
@@ -222,15 +222,15 @@ class Player(pygame.sprite.Sprite):
             time = 0
             self.isJump = False
             while time <= 20000:
-                self.rect.y -= gravity * clock.tick()
+                self.rect.y -= GRAVITY * clock.tick()
                 time += 1
-            #self.isJump = True
+            # self.isJump = True
 
     def fall(self, floor):
         # падение игрока
         if self.can_fall:
             if floor != 3 and floor != 4 and floor != 2:
-                self.rect = self.rect.move(0, 2)
+                self.rect = self.rect.move(0, 3)
 
     def get_pos_plr(self, plus=1):
         return self.rect.x // 32 + 1, self.rect.y // 32 + plus
@@ -260,6 +260,7 @@ class Enemy(pygame.sprite.Sprite):
         for i in range(1, 9):
             self.images.append(load_image(f'fly_demon{i}.png'))
             self.images.append(load_image(f'fly_demon{i}.png'))
+            # два раза одно и то же, ибо кадров мало, а иначе слишком быстро
 
         self.index = 0
         self.image = self.images[self.index]
@@ -292,6 +293,42 @@ class Enemy(pygame.sprite.Sprite):
             if self.rect.y == self.y * 32:
                 self.up = True
         self.rect.y += speed
+
+
+class Platform(pygame.sprite.Sprite):
+    image = load_image("platform.png")
+
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.rect = self.image.get_rect()
+        self.rect.y = 17 * 32
+        self.rect.x = 21 * 32
+        self.start = self.rect.x
+        self.image = pygame.transform.scale(self.image, (64, 32))
+        self.p_mask = pygame.mask.from_surface(self.image)
+        self.go_right = False
+
+    def fly_platform(self):
+        if self.go_right:
+            self.rect = self.rect.move(2, 0)
+        else:
+            self.rect = self.rect.move(-2, 0)
+        if self.rect.x == self.start + 416:
+            self.go_right = False
+        elif self.rect.x == self.start:
+            self.go_right = True
+
+        if pygame.sprite.collide_mask(player, platform):
+            player.can_fall = False
+            player.rect.y -= 1
+        else:
+            player.can_fall = True
+
+    def replace_platform(self, new_x, new_y):
+        self.rect.x = new_x * 32
+        self.start = new_x * 32
+        self.rect.y = new_y * 32
+        # координаты в тайлах
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -375,211 +412,190 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = plr_y + 2
 
 
-class Platform(pygame.sprite.Sprite):
-    image = load_image("platform.png")
-
-    def __init__(self, *groups):
-        super().__init__(*groups)
-        self.rect = self.image.get_rect()
-        self.rect.y = 17 * 32
-        self.rect.x = 21 * 32
-        self.start = self.rect.x
-        self.image = pygame.transform.scale(self.image, (64, 32))
-        self.p_mask = pygame.mask.from_surface(self.image)
-        self.go_right = False
-
-    def fly_platform(self):
-        if self.go_right:
-            self.rect = self.rect.move(2, 0)
-        else:
-            self.rect = self.rect.move(-2, 0)
-        if self.rect.x == self.start:
-            self.go_right = False
-        elif self.rect.x == self.start - 416:
-            self.go_right = True
-
-        if pygame.sprite.collide_mask(player, platform):
-            player.can_fall = False
-            player.rect.y -= 1
-        else:
-            player.can_fall = True
-
-    def replace_platform(self, new_x, new_y):
-        self.rect.x = new_x * 32
-        self.start = new_x * 32
-        self.rect.y = new_y * 32
-        # координаты в тайлах
-
-
 class Level:
-    def __init__(self, num=1):
-        self.map = pytmx.load_pygame(f"data/map{num}.tmx")
+    def __init__(self, lvl=1):
+        self.map = pytmx.load_pygame(f"data/map{lvl}.tmx")
         self.height = self.map.height
         self.width = self.map.width
         self.tile_size = 32
-        self.now_lvl = num
+        self.now_lvl = lvl
 
     def render(self):
         for y in range(self.height):
             for x in range(self.width):
                 image = self.map.get_tile_image(x, y, 0)
-                screen.blit(image, (x * self.tile_size, y * self.tile_size))
+                SCREEN.blit(image, (x * self.tile_size, y * self.tile_size))
 
     def get_tileid(self, pos):
         # print(self.map.get_tile_gid(pos[0], pos[1], 0))
         return self.map.get_tile_gid(pos[0], pos[1], 0)
 
 
-FPS = 60
 
-pygame.init()
-pygame.mixer.init()
-pygame.mixer.music.load(load_wave('main.mp3'))
 
-start_screen()
-all_sprites = pygame.sprite.Group()
-player = Player(all_sprites)
-bullet = Bullet()
-bullet.kill()
+class Game:
 
-enemy = Enemy(all_sprites)
-enemy.place(12, 15)
-# расположение указывать в тайлах (один тайл 32х32)
-enemy2 = Enemy(all_sprites)
-enemy2.place(14, 4)
 
-enemy3 = Enemy(all_sprites)
-enemy3.place(10, 15)
-enemy3.kill()
+    def __init__(self):
+        pass
 
-enemy4 = Enemy(all_sprites)
-enemy4.place(22, 10)
-enemy4.kill()
-check = 0
+    def start(self):
 
-all_sprites.add(player)
-all_sprites.add(enemy)
-all_sprites.add(enemy2)
+        while running:
+            clock.tick(FPS)
+            if lvl.now_lvl == 2:
+                lvl = Level(2)
+                enemy2.kill()
+                enemy.kill()
+                if not self.check:
+                    all_sprites.add(enemy3)
+                    all_sprites.add(enemy4)
+                    check += 1
+            elif lvl.now_lvl == 3:
+                lvl = Level(3)
+                enemy3.kill()
+                enemy4.kill()
+                all_sprites.add(platform)
+                if check == 1:
+                    all_sprites.add(enemy)
+                    all_sprites.add(enemy2)
 
-lvl = Level(1)
-platform = Platform(all_sprites)
-platform.kill()
+                    enemy.place(14, 21)
+                    enemy2.place(24, 15)
+                    check += 1
+            elif lvl.now_lvl == 4:
+                lvl = Level(4)
+                enemy.kill()
+                enemy2.kill()
+                all_sprites.add(platform)
+                if check == 2:
+                    all_sprites.add(enemy3)
+                    all_sprites.add(enemy4)
+                    enemy3.place(15, 8)
+                    enemy4.place(13, 15)
+                    check += 1
+            elif lvl.now_lvl == 5:
+                lvl = Level(5)
+                enemy3.kill()
+                enemy4.kill()
+                all_sprites.add(platform)
+                if check == 3:
+                    all_sprites.add(enemy)
+                    all_sprites.add(enemy2)
+                    enemy3.place(15, 8)
+                    enemy4.place(13, 15)
+                    platform.replace_platform(11, 9)
+                    check += 1
 
-pygame.mixer.music.play(-1)
+            self.lvl.render()
 
-while running:
-    clock.tick(FPS)
-    if lvl.now_lvl == 2:
-        lvl = Level(2)
-        enemy2.kill()
-        enemy.kill()
-        if not check:
-            enemy3.add(all_sprites)
-            enemy4.add(all_sprites)
-            check += 1
-    elif lvl.now_lvl == 3:
-        lvl = Level(3)
-        enemy3.kill()
-        enemy4.kill()
-        all_sprites.add(platform)
-        if check == 1:
-            all_sprites.add(enemy)
-            all_sprites.add(enemy2)
+            for event in pygame.event.get():
 
-            enemy.place(14, 21)
-            enemy2.place(24, 15)
-            check += 1
-    elif lvl.now_lvl == 4:
-        lvl = Level(4)
-        enemy.kill()
-        enemy2.kill()
-        all_sprites.add(platform)
-        if check == 2:
-            all_sprites.add(enemy3)
-            all_sprites.add(enemy4)
-            enemy3.place(15, 8)
-            enemy4.place(13, 15)
-            check += 1
-    elif lvl.now_lvl == 5:
-        lvl = Level(5)
-        enemy3.kill()
-        enemy4.kill()
-        all_sprites.add(platform)
-        if check == 3:
-            all_sprites.add(enemy)
-            all_sprites.add(enemy2)
-            enemy3.place(15, 8)
-            enemy4.place(13, 15)
-            platform.replace_platform(11, 9)
-            check += 1
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    terminate()
+                if event.type == pygame.KEYDOWN:
+                    # started = False
+                    if event.key == pygame.K_LEFT and player.on_right:
+                        # поворот игрока в сторону движения
+                        player.image = pygame.transform.flip(player.image, True, False)
+                        player.on_right = False
+                    if event.key == pygame.K_RIGHT and not player.on_right:
+                        # поворот игрока в сторону движения
+                        player.image = pygame.transform.flip(player.image, True, False)
+                        player.on_right = True
+                    if event.key == pygame.K_s and not bullet.alive():
+                        bullet.is_fire = True
 
-    lvl.render()
+                    if event.key == pygame.K_SPACE and not player.isJump:
+                        player.isJump = True
+                        player.jump()
 
-    for event in pygame.event.get():
+            if player.alive():
+                player.go_horizont(lvl.get_tileid(player.get_pos_plr(2)))
+                player.go_up(lvl.get_tileid(player.get_pos_plr(2)))
+                player.fall(lvl.get_tileid(player.get_pos_plr(2)))
+                # от grt_pos_plr получаем место игрока (нижний middle) в теории
+                # отдаем в get_tileid и в ответ получаем id клетки
+                # отдаем это в go_up чтобы поднятся
 
-        if event.type == pygame.QUIT:
-            running = False
-            terminate()
-        if event.type == pygame.KEYDOWN:
-            started = False
-            if event.key == pygame.K_LEFT and player.on_right:
-                # поворот игрока в сторону движения
-                player.image = pygame.transform.flip(player.image, True, False)
-                player.on_right = False
-            if event.key == pygame.K_RIGHT and not player.on_right:
-                # поворот игрока в сторону движения
-                player.image = pygame.transform.flip(player.image, True, False)
-                player.on_right = True
-            if event.key == pygame.K_s and not bullet.alive():
-                bullet.is_fire = True
-
-            if event.key == pygame.K_SPACE and not player.isJump:
-                player.isJump = True
                 player.jump()
+                player.die()
+            else:
+                # dead_screen()
+                d_m = dead_menu.DeadMenu()
+                d_m.show()
+                Game.running = False
 
-    if player.alive():
-        player.go_horizont(lvl.get_tileid(player.get_pos_plr(2)))
-        player.go_up(lvl.get_tileid(player.get_pos_plr(2)))
-        player.fall(lvl.get_tileid(player.get_pos_plr(2)))
-        # от grt_pos_plr получаем место игрока (нижний middle) в теории
-        # отдаем в get_tileid и в ответ получаем id клетки
-        # отдаем это в go_up чтобы поднятся
+            # проверяет есть ли возможность выстрела
+            if bullet.is_fire and bullet.alive():
+                bullet.shoot()
+            elif bullet.is_fire and not bullet.alive():
+                all_sprites.add(bullet)
+                bullet.shoot()
+            elif not bullet.is_fire and not bullet.alive():
+                bullet.update(player.rect.x, player.rect.y)
 
-        player.jump()
-        player.die()
-    else:
-        # dead_screen()
-        d_m = dead_menu.DeadMenu()
-        d_m.show()
+            if lvl.now_lvl > 2:
+                platform.fly_platform()
 
-        running = False
-        # pygame.quit()
+            enemy.update()
+            enemy.fly()
+            enemy2.update()
+            enemy2.fly()
 
-    # проверяет есть ли возможность выстрела
-    if bullet.is_fire and bullet.alive():
-        bullet.shoot()
-    elif bullet.is_fire and not bullet.alive():
-        all_sprites.add(bullet)
-        bullet.shoot()
-    elif not bullet.is_fire and not bullet.alive():
-        bullet.update(player.rect.x, player.rect.y)
+            if lvl.now_lvl % 2 == 0:
+                enemy3.update()
+                enemy3.fly()
+                enemy4.update()
+                enemy4.fly()
 
-    enemy.update()
-    enemy.fly()
-    enemy2.update()
-    enemy2.fly()
+            all_sprites.draw(SCREEN)
+            pygame.display.flip()
+            SCREEN.fill((0, 0, 0))
 
-    if lvl.now_lvl % 2 == 0:
-        enemy3.update()
-        enemy3.fly()
-        enemy4.update()
-        enemy4.fly()
-    if lvl.now_lvl > 2:
-        platform.fly_platform()
 
-    all_sprites.draw(screen)
-    pygame.display.flip()
-    screen.fill((0, 0, 0))
+# game = Game()
+# game.start()
 
-pygame.quit()
-running = True
+if __name__ == '__main__':
+    running = True
+
+    FPS = 60
+
+    pygame.init()
+    pygame.mixer.init()
+    pygame.mixer.music.load(load_wave('main.mp3'))
+
+    start_screen()
+    all_sprites = pygame.sprite.Group()
+    player = Player(all_sprites)
+    bullet = Bullet()
+    bullet.kill()
+
+    enemy = Enemy(all_sprites)
+    enemy.place(12, 15)
+    # расположение указывать в тайлах (один тайл 32х32)
+    enemy2 = Enemy(all_sprites)
+    enemy2.place(14, 4)
+
+    enemy3 = Enemy(all_sprites)
+    enemy3.place(10, 15)
+    enemy3.kill()
+
+    enemy4 = Enemy(all_sprites)
+    enemy4.place(22, 10)
+    enemy4.kill()
+    check = 0
+
+    all_sprites.add(player)
+    all_sprites.add(enemy)
+    all_sprites.add(enemy2)
+
+    platform = Platform(all_sprites)
+    platform.kill()
+
+    lvl = Level(1)
+    lvl2 = Level(2)
+    pygame.mixer.music.play(-1)
+    game = Game()

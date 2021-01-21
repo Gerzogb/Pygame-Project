@@ -14,7 +14,7 @@ class MyWidget(QWidget):
     def play(self):
         self.hide()
         import game
-        self.show()
+        # self.show()
 
     def settingsWindow(self):
         self.hide()

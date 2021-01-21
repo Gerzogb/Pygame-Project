@@ -14,7 +14,8 @@ class DeadMenu(QWidget):
     def new(self):
         self.hide()
         import game
-        self.show()
+
+        # self.show()
 
     def ex(self):
         sys.exit()
