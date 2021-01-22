@@ -1,5 +1,7 @@
 import sys
 
+import configparser
+
 from PyQt5 import uic  # Импортируем uic
 from PyQt5.QtWidgets import QApplication, QWidget
 
@@ -25,16 +27,29 @@ class MyWidget(QWidget):
 class SettingWindow(QWidget):
     def __init__(self):
         super().__init__()
+        config = configparser.ConfigParser()
         uic.loadUi('settings.ui', self)
         self.btn_save.clicked.connect(self.save)
         self.btn_back.clicked.connect(self.back)
+        self.slide.valueChanged[int].connect(self.changeValue)
+        self.val = 100
+        self.slide.setMinimum(0)
+        self.slide.setMaximum(100)
+        config.read("example.ini")
+        self.slide.setValue(round(float(config.get("Value", "value")), 1) * 100)
 
     def save(self):
-        pass
+        config = configparser.ConfigParser()
+        config['Value'] = {'value': self.val / 100}
+        with open('example.ini', 'w') as configfile:
+            config.write(configfile)
 
     def back(self):
         self.hide()
         ex.show()
+
+    def changeValue(self, value):
+        self.val = value
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

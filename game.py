@@ -1,5 +1,7 @@
 import os
 import sys
+from configparser import ConfigParser
+
 import pygame
 import pytmx
 import dead_menu  # игнорируй эту ошибку, она не влияет
@@ -434,6 +436,12 @@ FPS = 60
 
 pygame.init()
 pygame.mixer.init()
+config = ConfigParser()
+config.read("example.ini")
+val = round(float(config.get("Value", "value")), 1)
+print(val)
+pygame.mixer.music.set_volume(val)
+print(pygame.mixer.music.get_volume())
 pygame.mixer.music.load(load_wave('main.mp3'))
 
 start_screen()
