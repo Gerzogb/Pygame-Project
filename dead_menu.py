@@ -2,6 +2,7 @@ import sys
 
 from PyQt5 import uic  # Импортируем uic
 from PyQt5.QtWidgets import QApplication, QWidget
+import game
 
 
 class DeadMenu(QWidget):
@@ -12,8 +13,10 @@ class DeadMenu(QWidget):
         self.btn_ex.clicked.connect(self.ex)
 
     def new(self):
+
+        game.game_start()
+        print(game.running)
         self.hide()
-        import game
 
         # self.show()
 
@@ -23,6 +26,6 @@ class DeadMenu(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = DeadMenu()
-    ex.show()
+    window = DeadMenu()
+    window.show()
     sys.exit(app.exec_())

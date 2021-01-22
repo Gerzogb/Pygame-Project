@@ -2,7 +2,7 @@ import os
 import sys
 import pygame
 import pytmx
-import dead_menu  # игнорируй эту ошибку, она не влияет
+# import dead_menu  # игнорируй эту ошибку, она не влияет
 
 
 pygame.init()
@@ -11,7 +11,7 @@ screen = pygame.display.set_mode(size)
 gravity = 3
 clock = pygame.time.Clock()
 started = True
-running = True
+# running = True
 # 1 - фон, 2 - лестница, 3 - поверхность для ходьбы, 4 - земля
 # взято из урока:
 
@@ -51,7 +51,7 @@ def start_screen():
     intro_text = ["По нелепой случайности вас отправили в ад",
                   "Вам необходимо сбежать оттуда",
                   "",
-                  "Правила игры:",
+                  "Управление:",
                   "Ходьба: стрелочки,",
                   "Прыжок: пробел,",
                   "Выстрел: ы / s",
@@ -61,13 +61,13 @@ def start_screen():
     fon = pygame.Rect(0, 0, 960, 800)
     pygame.draw.rect(screen, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
-    text_coord = 80
+    text_coord = 250
     for line in intro_text:
         string_rendered = font.render(line, True, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
-        intro_rect.x = 10
+        intro_rect.x = 250
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
@@ -82,61 +82,33 @@ def start_screen():
         clock.tick(FPS)
 
 
-def dead_screen():
-    intro_text = ["Вы умерли",
-                  "",
-                  "нажмите любую клавишу для продолжения"]
-
-    fon = pygame.Rect(0, 0, 960, 800)
-    pygame.draw.rect(screen, (205, 92, 92), fon, 0)
-    font = pygame.font.Font(None, 30)
-    text_coord = 80
-    for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
-
-    while True:
-        pygame.display.flip()
-        clock.tick(FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                terminate()
-
-
 def end_screen():
     # это экран плохой концовки, появляется если убиты все 4 демона
-    if player.KILLS == 4:
-        intro_text = ["Вы убили всех демонов на пути",
+    end_text = ''
+    if player.KILLS == 9:
+        end_text = ["Вы убили всех демонов на пути",
                       "",
-                      "За это вас оставили в аду"]
-    elif player.KILLS in range(1, 4):
-        intro_text = ["Вы убили несколько демонов",
+                      "Bас оставили в аду"]
+    elif player.KILLS in range(1, 9):
+        end_text = [f"Вы убили {player.KILLS} демонов",
                       "",
                       "Вас отправили в чистилище"]
     elif player.KILLS == 0:
-        intro_text = ["Вы успешно выбрались из ада сохранив святость",
+        end_text = ["Вы успешно выбрались из ада сохранив святость",
                       "",
                       "Вас немедленно отправили в рай"]
     fon = pygame.Rect(0, 0, 960, 800)
     pygame.draw.rect(screen, (205, 92, 92), fon, 0)
     font = pygame.font.Font(None, 30)
-    text_coord = 80
-    for line in intro_text:
+    text_coord = 250
+    for line in end_text:
         string_rendered = font.render(line, True, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
+        end_text = string_rendered.get_rect()
         text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+        end_text.top = text_coord
+        end_text.x = 250
+        text_coord += end_text.height
+        screen.blit(string_rendered, end_text)
 
     while True:
         pygame.display.flip()
@@ -171,17 +143,17 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.x >= 960 - 64:
             if lvl.now_lvl == 1:
                 lvl.now_lvl = 2
-                self.rect.x = 32
-                self.rect.y = 15 * 32
+                self.respawn()
             elif lvl.now_lvl == 2:
                 lvl.now_lvl = 3
-                self.rect.x = 32
-                self.rect.y = 15 * 32
+                self.respawn()
             elif lvl.now_lvl == 3:
                 lvl.now_lvl = 4
-                self.rect.x = 32
-                self.rect.y = 15 * 32
+                self.respawn()
             elif lvl.now_lvl == 4:
+                lvl.now_lvl = 5
+                self.respawn()
+            else:
                 end_screen()
 
         if is_ground in range(1, 4):
@@ -250,6 +222,10 @@ class Player(pygame.sprite.Sprite):
             player.kill()
         if lvl.get_tileid(player.get_pos_plr()) == 3:
             player.kill()
+
+    def respawn(self):
+        self.rect.x = 32
+        self.rect.y = 15 * 32
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -455,7 +431,6 @@ enemy3.kill()
 enemy4 = Enemy(all_sprites)
 enemy4.place(22, 10)
 enemy4.kill()
-check = 0
 
 all_sprites.add(player)
 all_sprites.add(enemy)
@@ -466,6 +441,9 @@ platform = Platform(all_sprites)
 platform.kill()
 
 pygame.mixer.music.play(-1)
+
+check = 0
+running = True
 
 while running:
     clock.tick(FPS)
@@ -508,9 +486,10 @@ while running:
         if check == 3:
             all_sprites.add(enemy)
             all_sprites.add(enemy2)
-            enemy3.place(15, 8)
-            enemy4.place(13, 15)
-            platform.replace_platform(11, 9)
+            enemy.place(28, 11)
+            enemy2.place(13, 15)
+            platform.go_right = False
+            platform.replace_platform(21, 8)
             check += 1
 
     lvl.render()
@@ -536,6 +515,9 @@ while running:
             if event.key == pygame.K_SPACE and not player.isJump:
                 player.isJump = True
                 player.jump()
+            if event.key == pygame.K_r and not player.alive():
+                all_sprites.add(player)
+                player.respawn()
 
     if player.alive():
         player.go_horizont(lvl.get_tileid(player.get_pos_plr(2)))
@@ -547,22 +529,24 @@ while running:
 
         player.jump()
         player.die()
+        # проверяет есть ли возможность выстрела
+        if bullet.is_fire and bullet.alive():
+            bullet.shoot()
+        elif bullet.is_fire and not bullet.alive():
+            all_sprites.add(bullet)
+            bullet.shoot()
+        elif not bullet.is_fire and not bullet.alive():
+            bullet.update(player.rect.x, player.rect.y)
+
     else:
+        font = pygame.font.Font(None, 30)
+        gameover = font.render("Press R to Respawn", False, (255, 255, 255))
+        rect = gameover.get_rect()
+        rect.center = screen.get_rect().center
+        screen.blit(gameover, rect)
         # dead_screen()
-        d_m = dead_menu.DeadMenu()
-        d_m.show()
-
-        running = False
+        # running = False
         # pygame.quit()
-
-    # проверяет есть ли возможность выстрела
-    if bullet.is_fire and bullet.alive():
-        bullet.shoot()
-    elif bullet.is_fire and not bullet.alive():
-        all_sprites.add(bullet)
-        bullet.shoot()
-    elif not bullet.is_fire and not bullet.alive():
-        bullet.update(player.rect.x, player.rect.y)
 
     enemy.update()
     enemy.fly()
@@ -580,6 +564,9 @@ while running:
     all_sprites.draw(screen)
     pygame.display.flip()
     screen.fill((0, 0, 0))
+# pygame.display.quit()
 
-pygame.quit()
-running = True
+# import dead_menu
+# d_m = dead_menu.DeadMenu()
+# d_m.show()
+
