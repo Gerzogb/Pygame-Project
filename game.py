@@ -19,6 +19,7 @@ started = True
 
 
 def load_image(name, colorkey=None):
+    # отвечает за загрузку изображения
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -45,11 +46,13 @@ def load_wave(name):
 
 
 def terminate():
+    # закрывает и прекращает всё
     pygame.quit()
     sys.exit()
 
 
 def start_screen():
+    # начальный экран
     intro_text = ["По нелепой случайности вас отправили в ад",
                   "Вам необходимо сбежать оттуда",
                   "",
@@ -65,6 +68,7 @@ def start_screen():
     font = pygame.font.Font(None, 30)
     text_coord = 250
     for line in intro_text:
+        # выводит текст
         string_rendered = font.render(line, True, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
@@ -85,7 +89,7 @@ def start_screen():
 
 
 def end_screen():
-    # это экран плохой концовки, появляется если убиты все 4 демона
+    # это экран концовок
     end_text = ''
     if player.KILLS == 9:
         end_text = ["Вы убили всех демонов на пути",
@@ -104,6 +108,7 @@ def end_screen():
     font = pygame.font.Font(None, 30)
     text_coord = 250
     for line in end_text:
+        # выводит текст концовки, к-й зависит от убитых демонов
         string_rendered = font.render(line, True, pygame.Color('black'))
         end_text = string_rendered.get_rect()
         text_coord += 10
@@ -114,7 +119,6 @@ def end_screen():
 
     while True:
         pygame.display.flip()
-        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -132,20 +136,20 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = 32
         self.rect.y = 15 * 32
         self.speedx = 0
-        self.can_fall = True
+        self.can_fall = True  # использутся на платформе, чтобы игрок не падал с неё
         self.mask = pygame.mask.from_surface(self.image)
         self.isJump = True
         self.on_right = True
-        self.KILLS = 0 # счетчик убийств
+        self.KILLS = 0  # счетчик убийств
 
     def go_horizont(self, is_ground):
         self.speedx = 0
         if self.rect.x < 16:  # чтобы за экран не уходил
             self.rect.x = 16
-        elif self.rect.x >= 960 - 64:
+        elif self.rect.x >= 960 - 64:  # переход на новый уровень
             if lvl.now_lvl == 1:
                 lvl.now_lvl = 2
-                self.respawn()
+                self.respawn()  # переносит игрока в начало уровня
             elif lvl.now_lvl == 2:
                 lvl.now_lvl = 3
                 self.respawn()
@@ -156,7 +160,7 @@ class Player(pygame.sprite.Sprite):
                 lvl.now_lvl = 5
                 self.respawn()
             else:
-                end_screen()
+                end_screen()  # заканчивает игру
 
         if is_ground in range(1, 4):
             # проверка на возможность идти
@@ -220,12 +224,15 @@ class Player(pygame.sprite.Sprite):
             player.kill()
         if pygame.sprite.collide_mask(enemy4, player) and enemy4.alive():
             player.kill()
+        # так же если игрок упал ниже экрана
         if self.rect.y > 700:
             player.kill()
+        # или если коснулся земли
         if lvl.get_tileid(player.get_pos_plr()) == 3:
             player.kill()
 
     def respawn(self):
+        # возвращает игрока на начальную позицию на текущем уровне
         self.rect.x = 32
         self.rect.y = 15 * 32
 
@@ -234,16 +241,17 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, *groups):
         super().__init__(*groups)
         self.images = []
-
+        # анимация спрайта \/
         for i in range(1, 9):
             self.images.append(load_image(f'fly_demon{i}.png'))
             self.images.append(load_image(f'fly_demon{i}.png'))
+            # повторяется два раза, ибо кадров мало, а иначе слишком быстро машет крыльями
 
         self.index = 0
         self.image = self.images[self.index]
         self.image = pygame.transform.scale(self.image, (96, 96))
         self.rect = self.image.get_rect()
-        self.up = False
+        self.up = False  # отвечает за полет вверх-вниз
         self.enm_mask = pygame.mask.from_surface(self.image)
 
     def place(self, x_pos, y_pos):
@@ -253,12 +261,14 @@ class Enemy(pygame.sprite.Sprite):
         self.y = y_pos  # координаты в тайлах
 
     def update(self):
+        # анимация полета
         self.index += 1
         if self.index >= len(self.images):
             self.index = 0
         self.image = self.images[self.index]
 
     def fly(self):
+        # полет врага
         speed = 0
         if self.rect.y >= (self.y - 3) * 32 and self.up:
             speed -= 2
@@ -279,7 +289,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, *groups):
         super().__init__(*groups)
         self.rect = self.image.get_rect()
-        self.is_fire = False
+        self.is_fire = False  # проверка может ли игрок выстрелить
         self.go_straight = 0  # чтобы пуля не поворачивалась за игроком
         if not self.is_fire:
             self.rect.x = player.rect.x + 1
@@ -290,10 +300,11 @@ class Bullet(pygame.sprite.Sprite):
 
     def shoot(self):
         print('shooted')
+        # следует за игроком все время пока нет выстрела
         if not self.is_fire and not bullet.alive():
             self.rect.x = player.rect.x + 1
             self.rect.y = player.rect.y + 2
-
+        # убивает врага при касании
         elif pygame.sprite.collide_mask(enemy, bullet) and self.is_fire and enemy.alive():
             bullet.kill()
             enemy.kill()
@@ -325,7 +336,7 @@ class Bullet(pygame.sprite.Sprite):
             player.KILLS += 1
             print('killed')
             self.is_fire = False
-
+        # пуля исчезает как только уходит за пределы экрана
         elif self.rect.x >= 981 or self.rect.x <= 0:
             bullet.kill()
             self.go_straight = 0
@@ -364,9 +375,10 @@ class Platform(pygame.sprite.Sprite):
         self.start = self.rect.x
         self.image = pygame.transform.scale(self.image, (64, 32))
         self.p_mask = pygame.mask.from_surface(self.image)
-        self.go_right = False
+        self.go_right = False  # отвечает за возможность движения влево-вправо
 
     def fly_platform(self):
+        # осуществляет движение
         if self.go_right:
             self.rect = self.rect.move(2, 0)
         else:
@@ -389,8 +401,22 @@ class Platform(pygame.sprite.Sprite):
         # координаты в тайлах
 
 
+class Checkpoint(pygame.sprite.Sprite):
+    image = load_image("checkpoint.png")
+    # создает чекпоинт
+
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.rect = self.image.get_rect()
+        self.rect.x = 32
+        self.rect.y = 15 * 32
+        self.image = pygame.transform.scale(self.image, (32, 64))
+        self.b_mask = pygame.mask.from_surface(self.image)
+
+
 class Level:
     def __init__(self, num=1):
+        # загружает уровеньв зависимости от переданной цифры
         self.map = pytmx.load_pygame(f"data/map{num}.tmx")
         self.height = self.map.height
         self.width = self.map.width
@@ -423,6 +449,7 @@ pygame.mixer.music.load(load_wave('main.mp3'))
 start_screen()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
+# создание и "убийство" пули сразу, чтобы не было видно
 bullet = Bullet()
 bullet.kill()
 
@@ -435,7 +462,7 @@ enemy2.place(14, 4)
 enemy3 = Enemy(all_sprites)
 enemy3.place(10, 15)
 enemy3.kill()
-
+# создаем и сразу убиваем врагов, чтобы не было их видно
 enemy4 = Enemy(all_sprites)
 enemy4.place(22, 10)
 enemy4.kill()
@@ -444,6 +471,7 @@ all_sprites.add(player)
 all_sprites.add(enemy)
 all_sprites.add(enemy2)
 
+checkpoint = Checkpoint(all_sprites)
 lvl = Level(1)
 platform = Platform(all_sprites)
 platform.kill()
@@ -455,6 +483,7 @@ running = True
 
 while running:
     clock.tick(FPS)
+    # загрузка других уровней и врагов, новое расположение врагов
     if lvl.now_lvl == 2:
         lvl = Level(2)
         enemy2.kill()
@@ -517,17 +546,22 @@ while running:
                 # поворот игрока в сторону движения
                 player.image = pygame.transform.flip(player.image, True, False)
                 player.on_right = True
+
             if event.key == pygame.K_s and not bullet.alive():
+                # выстред
                 bullet.is_fire = True
 
             if event.key == pygame.K_SPACE and not player.isJump:
                 player.isJump = True
                 player.jump()
+
             if event.key == pygame.K_r and not player.alive():
+                # рестарт уровня, если игрок умер
                 all_sprites.add(player)
                 player.respawn()
 
     if player.alive():
+        # пока игрок жив он может ходить, подниматься по лестницам, падать, прыгать и умирать
         player.go_horizont(lvl.get_tileid(player.get_pos_plr(2)))
         player.go_up(lvl.get_tileid(player.get_pos_plr(2)))
         player.fall(lvl.get_tileid(player.get_pos_plr(2)))
@@ -537,6 +571,7 @@ while running:
 
         player.jump()
         player.die()
+        # а также стрелять
         # проверяет есть ли возможность выстрела
         if bullet.is_fire and bullet.alive():
             bullet.shoot()
@@ -547,6 +582,7 @@ while running:
             bullet.update(player.rect.x, player.rect.y)
 
     else:
+        # после смерти предлагается возрождение
         font = pygame.font.Font(None, 30)
         gameover = font.render("Press R to Respawn", False, (255, 255, 255))
         rect = gameover.get_rect()
@@ -572,9 +608,4 @@ while running:
     all_sprites.draw(screen)
     pygame.display.flip()
     screen.fill((0, 0, 0))
-# pygame.display.quit()
-
-# import dead_menu
-# d_m = dead_menu.DeadMenu()
-# d_m.show()
 
